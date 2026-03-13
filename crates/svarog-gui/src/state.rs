@@ -13,12 +13,23 @@ use svarog::p4k::P4kArchive;
 #[derive(Debug)]
 pub enum WorkerMessage {
     P4kLoaded(Result<Arc<P4kArchive>, String>),
-    P4kProgress { current: usize, total: usize, stage: String },
+    P4kProgress {
+        current: usize,
+        total: usize,
+        stage: String,
+    },
     DataCoreLoaded(Result<Arc<DataCoreDatabase>, String>),
-    DataCoreProgress { current: usize, total: usize },
+    DataCoreProgress {
+        current: usize,
+        total: usize,
+    },
     ReferenceIndexReady(Arc<ReferenceIndex>),
     StructReferenceIndexReady(Arc<StructReferenceIndex>),
-    ExtractionProgress { current: usize, total: usize, current_file: String },
+    ExtractionProgress {
+        current: usize,
+        total: usize,
+        current_file: String,
+    },
     ExtractionComplete(Result<(), String>),
     FilePreviewReady(PreviewData),
     Error(String),
@@ -62,7 +73,14 @@ impl FileTreeNode {
         }
     }
 
-    pub fn new_file(name: String, path: String, size: u64, compressed_size: u64, is_encrypted: bool, entry_index: usize) -> Self {
+    pub fn new_file(
+        name: String,
+        path: String,
+        size: u64,
+        compressed_size: u64,
+        is_encrypted: bool,
+        entry_index: usize,
+    ) -> Self {
         Self {
             name,
             path,
@@ -78,13 +96,12 @@ impl FileTreeNode {
 
     /// Sort children: directories first, then alphabetically
     pub fn sort_children(&mut self) {
-        self.children.sort_by(|a, b| {
-            match (a.is_directory, b.is_directory) {
+        self.children
+            .sort_by(|a, b| match (a.is_directory, b.is_directory) {
                 (true, false) => std::cmp::Ordering::Less,
                 (false, true) => std::cmp::Ordering::Greater,
                 _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-            }
-        });
+            });
         for child in &mut self.children {
             child.sort_children();
         }
@@ -118,7 +135,13 @@ impl DataCoreRecordNode {
         }
     }
 
-    pub fn new_record(name: String, type_name: String, id: String, record_index: usize, has_references: bool) -> Self {
+    pub fn new_record(
+        name: String,
+        type_name: String,
+        id: String,
+        record_index: usize,
+        has_references: bool,
+    ) -> Self {
         Self {
             name,
             type_name,
@@ -132,13 +155,12 @@ impl DataCoreRecordNode {
     }
 
     pub fn sort_children(&mut self) {
-        self.children.sort_by(|a, b| {
-            match (a.is_folder, b.is_folder) {
+        self.children
+            .sort_by(|a, b| match (a.is_folder, b.is_folder) {
                 (true, false) => std::cmp::Ordering::Less,
                 (false, true) => std::cmp::Ordering::Greater,
                 _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
-            }
-        });
+            });
         for child in &mut self.children {
             child.sort_children();
         }
@@ -165,7 +187,8 @@ impl DataCoreTypeNode {
     }
 
     pub fn sort_children(&mut self) {
-        self.children.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        self.children
+            .sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
         for child in &mut self.children {
             child.sort_children();
         }
@@ -419,7 +442,8 @@ impl AppState {
 
     pub fn show_error(&mut self, msg: impl Into<String>) {
         self.error_message = Some(msg.into());
-        self.error_dismiss_time = Some(std::time::Instant::now() + std::time::Duration::from_secs(5));
+        self.error_dismiss_time =
+            Some(std::time::Instant::now() + std::time::Duration::from_secs(5));
     }
 
     pub fn clear_error(&mut self) {
@@ -436,12 +460,16 @@ impl AppState {
                     match result {
                         Ok(archive) => {
                             self.p4k_archive = Some(archive);
-                        self.build_file_tree();
+                            self.build_file_tree();
                         }
                         Err(e) => self.show_error(format!("Failed to load P4K: {}", e)),
                     }
                 }
-                WorkerMessage::P4kProgress { current, total, stage } => {
+                WorkerMessage::P4kProgress {
+                    current,
+                    total,
+                    stage,
+                } => {
                     self.p4k_load_progress = (current, total, stage);
                 }
                 WorkerMessage::DataCoreLoaded(result) => {
@@ -473,7 +501,11 @@ impl AppState {
                 WorkerMessage::DataCoreProgress { current, total } => {
                     self.datacore_progress = (current, total);
                 }
-                WorkerMessage::ExtractionProgress { current, total, current_file } => {
+                WorkerMessage::ExtractionProgress {
+                    current,
+                    total,
+                    current_file,
+                } => {
                     self.extraction_progress = (current, total, current_file);
                 }
                 WorkerMessage::ExtractionComplete(result) => {
@@ -502,7 +534,9 @@ impl AppState {
 
     /// Build file tree from P4K archive
     fn build_file_tree(&mut self) {
-        let Some(archive) = &self.p4k_archive else { return };
+        let Some(archive) = &self.p4k_archive else {
+            return;
+        };
 
         let mut root = FileTreeNode::new_directory("root".to_string(), String::new());
 
@@ -533,7 +567,9 @@ impl AppState {
                     ));
                 } else {
                     // Directory node
-                    let pos = current_children.iter().position(|c| c.name == *part && c.is_directory);
+                    let pos = current_children
+                        .iter()
+                        .position(|c| c.name == *part && c.is_directory);
                     if let Some(pos) = pos {
                         current_children = &mut current_children[pos].children;
                     } else {
@@ -554,7 +590,7 @@ impl AppState {
 
     /// Build DataCore record tree
     fn build_datacore_tree(&mut self) {
-        use svarog::datacore::{Value, ArrayElementType};
+        use svarog::datacore::{ArrayElementType, Value};
 
         let Some(db) = &self.datacore else { return };
 
@@ -567,19 +603,19 @@ impl AppState {
 
             // Check if record has any references
             let instance = db.instance(record.struct_index as u32, record.instance_index as u32);
-            let has_refs = instance.properties().any(|prop| {
-                match &prop.value {
-                    Value::Reference(Some(_)) => true,
-                    Value::StrongPointer(Some(_)) => true,
-                    Value::WeakPointer(Some(_)) => true,
-                    Value::Array(arr) => {
-                        matches!(
-                            arr.element_type,
-                            ArrayElementType::Reference | ArrayElementType::StrongPointer | ArrayElementType::WeakPointer
-                        ) && arr.count > 0
-                    }
-                    _ => false,
+            let has_refs = instance.properties().any(|prop| match &prop.value {
+                Value::Reference(Some(_)) => true,
+                Value::StrongPointer(Some(_)) => true,
+                Value::WeakPointer(Some(_)) => true,
+                Value::Array(arr) => {
+                    matches!(
+                        arr.element_type,
+                        ArrayElementType::Reference
+                            | ArrayElementType::StrongPointer
+                            | ArrayElementType::WeakPointer
+                    ) && arr.count > 0
                 }
+                _ => false,
             });
 
             let mut current_children = &mut root.children;
@@ -590,7 +626,10 @@ impl AppState {
                 if is_last {
                     // Record node
                     let name = db.record_name(record).unwrap_or("Unknown").to_string();
-                    let type_name = db.struct_name(record.struct_index as usize).unwrap_or("Unknown").to_string();
+                    let type_name = db
+                        .struct_name(record.struct_index as usize)
+                        .unwrap_or("Unknown")
+                        .to_string();
                     current_children.push(DataCoreRecordNode::new_record(
                         name,
                         type_name,
@@ -600,7 +639,9 @@ impl AppState {
                     ));
                 } else {
                     // Folder node
-                    let pos = current_children.iter().position(|c| c.name == *part && c.is_folder);
+                    let pos = current_children
+                        .iter()
+                        .position(|c| c.name == *part && c.is_folder);
                     if let Some(pos) = pos {
                         current_children = &mut current_children[pos].children;
                     } else {
@@ -676,7 +717,7 @@ impl AppState {
     /// Note: This is deprecated in favor of the worker-based build_reference_index
     #[allow(dead_code)]
     fn build_reference_index(&mut self) {
-        use svarog::datacore::{Value, ArrayElementType};
+        use svarog::datacore::{ArrayElementType, Value};
 
         let Some(db) = &self.datacore else { return };
 
@@ -696,7 +737,10 @@ impl AppState {
         let mut instance_to_index: std::collections::HashMap<(u32, u32), usize> =
             std::collections::HashMap::new();
         for (idx, record) in main_records.iter().enumerate() {
-            instance_to_index.insert((record.struct_index as u32, record.instance_index as u32), idx);
+            instance_to_index.insert(
+                (record.struct_index as u32, record.instance_index as u32),
+                idx,
+            );
         }
 
         for (source_idx, record) in main_records.iter().enumerate() {
@@ -707,28 +751,31 @@ impl AppState {
                     Value::Reference(Some(record_ref)) => {
                         let guid_str = format!("{}", record_ref.guid);
                         if let Some(&target_idx) = guid_to_index.get(&guid_str) {
-                            incoming
-                                .entry(target_idx)
-                                .or_default()
-                                .push((source_idx, prop.name.to_string(), ReferenceType::Reference));
+                            incoming.entry(target_idx).or_default().push((
+                                source_idx,
+                                prop.name.to_string(),
+                                ReferenceType::Reference,
+                            ));
                         }
                     }
                     Value::StrongPointer(Some(instance_ref)) => {
                         let key = (instance_ref.struct_index, instance_ref.instance_index);
                         if let Some(&target_idx) = instance_to_index.get(&key) {
-                            incoming
-                                .entry(target_idx)
-                                .or_default()
-                                .push((source_idx, prop.name.to_string(), ReferenceType::StrongPointer));
+                            incoming.entry(target_idx).or_default().push((
+                                source_idx,
+                                prop.name.to_string(),
+                                ReferenceType::StrongPointer,
+                            ));
                         }
                     }
                     Value::WeakPointer(Some(instance_ref)) => {
                         let key = (instance_ref.struct_index, instance_ref.instance_index);
                         if let Some(&target_idx) = instance_to_index.get(&key) {
-                            incoming
-                                .entry(target_idx)
-                                .or_default()
-                                .push((source_idx, prop.name.to_string(), ReferenceType::WeakPointer));
+                            incoming.entry(target_idx).or_default().push((
+                                source_idx,
+                                prop.name.to_string(),
+                                ReferenceType::WeakPointer,
+                            ));
                         }
                     }
                     Value::Array(array_ref) => {
@@ -739,17 +786,21 @@ impl AppState {
                                         let idx = array_ref.first_index as usize + i as usize;
                                         if let Some(ref_val) = db.reference_value(idx) {
                                             let guid_str = format!("{}", ref_val.record_id);
-                                            if let Some(&target_idx) = guid_to_index.get(&guid_str) {
-                                                incoming
-                                                    .entry(target_idx)
-                                                    .or_default()
-                                                    .push((source_idx, format!("{}[{}]", prop.name, i), ReferenceType::Reference));
+                                            if let Some(&target_idx) = guid_to_index.get(&guid_str)
+                                            {
+                                                incoming.entry(target_idx).or_default().push((
+                                                    source_idx,
+                                                    format!("{}[{}]", prop.name, i),
+                                                    ReferenceType::Reference,
+                                                ));
                                             }
                                         }
                                     }
                                 }
                                 ArrayElementType::StrongPointer | ArrayElementType::WeakPointer => {
-                                    let ref_type = if array_ref.element_type == ArrayElementType::StrongPointer {
+                                    let ref_type = if array_ref.element_type
+                                        == ArrayElementType::StrongPointer
+                                    {
                                         ReferenceType::StrongPointer
                                     } else {
                                         ReferenceType::WeakPointer
@@ -764,12 +815,16 @@ impl AppState {
                                         };
 
                                         if let Some(ptr) = ptr {
-                                            let key = (ptr.struct_index as u32, ptr.instance_index as u32);
+                                            let key = (
+                                                ptr.struct_index as u32,
+                                                ptr.instance_index as u32,
+                                            );
                                             if let Some(&target_idx) = instance_to_index.get(&key) {
-                                                incoming
-                                                    .entry(target_idx)
-                                                    .or_default()
-                                                    .push((source_idx, format!("{}[{}]", prop.name, i), ref_type));
+                                                incoming.entry(target_idx).or_default().push((
+                                                    source_idx,
+                                                    format!("{}[{}]", prop.name, i),
+                                                    ref_type,
+                                                ));
                                             }
                                         }
                                     }
@@ -783,6 +838,9 @@ impl AppState {
             }
         }
 
-        self.reference_index = Some(std::sync::Arc::new(ReferenceIndex { incoming, guid_to_index }));
+        self.reference_index = Some(std::sync::Arc::new(ReferenceIndex {
+            incoming,
+            guid_to_index,
+        }));
     }
 }

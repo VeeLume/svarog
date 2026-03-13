@@ -40,17 +40,22 @@ pub fn progress_bar(ui: &mut Ui, current: usize, total: usize, label: &str) {
 /// Render a search box with clear button
 pub fn search_box(ui: &mut Ui, search: &mut String, placeholder: &str) -> Response {
     ui.horizontal(|ui| {
-        ui.label(RichText::new("?").monospace().color(Color32::from_gray(120)));
+        ui.label(
+            RichText::new("?")
+                .monospace()
+                .color(Color32::from_gray(120)),
+        );
         let response = ui.add(
             egui::TextEdit::singleline(search)
                 .hint_text(placeholder)
-                .desired_width(200.0)
+                .desired_width(200.0),
         );
         if !search.is_empty() && ui.button("x").clicked() {
             search.clear();
         }
         response
-    }).inner
+    })
+    .inner
 }
 
 /// Render a tree node with expand/collapse
@@ -79,9 +84,7 @@ pub fn tree_node<R>(
     });
 
     if *expanded && !is_leaf {
-        ui.indent(id, |ui| {
-            Some(add_contents(ui))
-        }).inner
+        ui.indent(id, |ui| Some(add_contents(ui))).inner
     } else {
         None
     }
@@ -172,9 +175,7 @@ pub fn confirmation_dialog(
 
 /// Styled button for primary actions
 pub fn primary_button(ui: &mut Ui, text: &str) -> Response {
-    ui.add(egui::Button::new(
-        RichText::new(text).strong()
-    ))
+    ui.add(egui::Button::new(RichText::new(text).strong()))
 }
 
 /// Styled button for secondary actions

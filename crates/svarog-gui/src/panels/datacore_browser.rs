@@ -1,9 +1,13 @@
 //! DataCore database browser panel
 
-use eframe::egui::{self, Color32, RichText, ScrollArea, Ui, Sense, Vec2, Key, CursorIcon};
+use eframe::egui::{self, Color32, CursorIcon, Key, RichText, ScrollArea, Sense, Ui, Vec2};
 use std::sync::Arc;
 
-use crate::state::{AppState, DataCorePage, DataCoreRecordNode, DataCoreTypeNode, IncomingReference, NavigationEntry, RecordReference, ReferenceIndex, ReferenceType, StructRefTarget, StructReferenceIndex, StructTypeReference};
+use crate::state::{
+    AppState, DataCorePage, DataCoreRecordNode, DataCoreTypeNode, IncomingReference,
+    NavigationEntry, RecordReference, ReferenceIndex, ReferenceType, StructRefTarget,
+    StructReferenceIndex, StructTypeReference,
+};
 use crate::widgets::{progress_bar, search_box};
 use crate::worker;
 
@@ -45,7 +49,10 @@ impl DataCoreBrowserPanel {
                     _ => state.selected_record.is_some(),
                 };
 
-                if ui.add_enabled(can_export_current, egui::Button::new("Export")).clicked() {
+                if ui
+                    .add_enabled(can_export_current, egui::Button::new("Export"))
+                    .clicked()
+                {
                     let db = state.datacore.clone();
                     if let Some(db) = db {
                         if let Err(e) = export_current(&db, state) {
@@ -68,14 +75,16 @@ impl DataCoreBrowserPanel {
                 let can_go_back = state.navigation_index > 0;
                 let can_go_forward = state.navigation_index + 1 < state.navigation_history.len();
 
-                if ui.add_enabled(can_go_back, egui::Button::new("<").small())
+                if ui
+                    .add_enabled(can_go_back, egui::Button::new("<").small())
                     .on_hover_text("Back (Mouse Back / Alt+Left)")
                     .clicked()
                 {
                     Self::navigate_back(state);
                 }
 
-                if ui.add_enabled(can_go_forward, egui::Button::new(">").small())
+                if ui
+                    .add_enabled(can_go_forward, egui::Button::new(">").small())
                     .on_hover_text("Forward (Mouse Forward / Alt+Right)")
                     .clicked()
                 {
@@ -133,9 +142,13 @@ impl DataCoreBrowserPanel {
                         ui.label(
                             RichText::new(format!("Type: {}", type_filter))
                                 .color(Color32::from_rgb(255, 200, 100))
-                                .small()
+                                .small(),
                         );
-                        if ui.small_button("x").on_hover_text("Clear type filter").clicked() {
+                        if ui
+                            .small_button("x")
+                            .on_hover_text("Clear type filter")
+                            .clicked()
+                        {
                             state.type_filter = None;
                         }
                         ui.separator();
@@ -150,7 +163,7 @@ impl DataCoreBrowserPanel {
                             db.struct_definitions().len(),
                             db.enum_definitions().len()
                         ))
-                        .color(Color32::from_gray(150))
+                        .color(Color32::from_gray(150)),
                     );
                 }
             }
@@ -389,24 +402,30 @@ impl DataCoreBrowserPanel {
                     ui.centered_and_justified(|ui| {
                         ui.vertical_centered(|ui| {
                             ui.add_space(100.0);
-                            ui.label(RichText::new("[DCB]").size(48.0).color(Color32::from_gray(80)));
+                            ui.label(
+                                RichText::new("[DCB]")
+                                    .size(48.0)
+                                    .color(Color32::from_gray(80)),
+                            );
                             ui.add_space(20.0);
                             ui.label(
                                 RichText::new("No DataCore loaded")
                                     .size(20.0)
-                                    .color(Color32::from_gray(150))
+                                    .color(Color32::from_gray(150)),
                             );
                             ui.add_space(10.0);
                             if state.p4k_archive.is_some() {
                                 ui.spinner();
                                 ui.label(
                                     RichText::new("Loading from P4K archive...")
-                                        .color(Color32::from_gray(100))
+                                        .color(Color32::from_gray(100)),
                                 );
                             } else {
                                 ui.label(
-                                    RichText::new("Load a P4K archive first, or open a standalone DCB file")
-                                        .color(Color32::from_gray(100))
+                                    RichText::new(
+                                        "Load a P4K archive first, or open a standalone DCB file",
+                                    )
+                                    .color(Color32::from_gray(100)),
                                 );
                             }
                         });
@@ -645,9 +664,15 @@ impl DataCoreBrowserPanel {
                     ui.centered_and_justified(|ui| {
                         ui.vertical_centered(|ui| {
                             ui.add_space(100.0);
-                            ui.label(RichText::new("[Types]").size(32.0).color(Color32::from_gray(80)));
+                            ui.label(
+                                RichText::new("[Types]")
+                                    .size(32.0)
+                                    .color(Color32::from_gray(80)),
+                            );
                             ui.add_space(10.0);
-                            ui.label(RichText::new("No DataCore loaded").color(Color32::from_gray(150)));
+                            ui.label(
+                                RichText::new("No DataCore loaded").color(Color32::from_gray(150)),
+                            );
                         });
                     });
                 }
@@ -833,9 +858,15 @@ impl DataCoreBrowserPanel {
                     ui.centered_and_justified(|ui| {
                         ui.vertical_centered(|ui| {
                             ui.add_space(100.0);
-                            ui.label(RichText::new("[Enums]").size(32.0).color(Color32::from_gray(80)));
+                            ui.label(
+                                RichText::new("[Enums]")
+                                    .size(32.0)
+                                    .color(Color32::from_gray(80)),
+                            );
                             ui.add_space(10.0);
-                            ui.label(RichText::new("No DataCore loaded").color(Color32::from_gray(150)));
+                            ui.label(
+                                RichText::new("No DataCore loaded").color(Color32::from_gray(150)),
+                            );
                         });
                     });
                 }
@@ -888,8 +919,12 @@ impl DataCoreBrowserPanel {
         }
 
         // Truncate forward history if we're not at the end
-        if !state.navigation_history.is_empty() && state.navigation_index + 1 < state.navigation_history.len() {
-            state.navigation_history.truncate(state.navigation_index + 1);
+        if !state.navigation_history.is_empty()
+            && state.navigation_index + 1 < state.navigation_history.len()
+        {
+            state
+                .navigation_history
+                .truncate(state.navigation_index + 1);
         }
 
         // Add to history
@@ -939,7 +974,8 @@ impl DataCoreBrowserPanel {
                 match svarog::datacore::XmlExporter::new(db).export_record(record) {
                     Ok(xml) => {
                         // Convert 2-space to 4-space indentation
-                        state.record_xml = xml.lines()
+                        state.record_xml = xml
+                            .lines()
                             .map(|line| {
                                 let spaces = line.len() - line.trim_start().len();
                                 let indent = "    ".repeat(spaces / 2);
@@ -953,7 +989,8 @@ impl DataCoreBrowserPanel {
                 state.record_references = extract_references(db, record, &state.reference_index);
 
                 // Extract incoming references from the index
-                state.incoming_references = extract_incoming_references(db, idx, &state.reference_index, &records);
+                state.incoming_references =
+                    extract_incoming_references(db, idx, &state.reference_index, &records);
             }
         }
     }
@@ -965,7 +1002,11 @@ impl DataCoreBrowserPanel {
             state.type_preview = generate_struct_preview(db, idx);
             state.struct_outgoing_refs = extract_struct_outgoing_refs(db, idx);
             if let Some(struct_ref_idx) = &state.struct_reference_index {
-                state.struct_incoming_refs = struct_ref_idx.incoming.get(&idx).cloned().unwrap_or_default();
+                state.struct_incoming_refs = struct_ref_idx
+                    .incoming
+                    .get(&idx)
+                    .cloned()
+                    .unwrap_or_default();
             } else {
                 state.struct_incoming_refs.clear();
             }
@@ -978,7 +1019,11 @@ impl DataCoreBrowserPanel {
         if let Some(db) = &state.datacore {
             state.enum_preview = generate_enum_preview(db, idx);
             if let Some(struct_ref_idx) = &state.struct_reference_index {
-                state.enum_incoming_refs = struct_ref_idx.enum_incoming.get(&idx).cloned().unwrap_or_default();
+                state.enum_incoming_refs = struct_ref_idx
+                    .enum_incoming
+                    .get(&idx)
+                    .cloned()
+                    .unwrap_or_default();
             } else {
                 state.enum_incoming_refs.clear();
             }
@@ -1065,7 +1110,7 @@ fn render_text_with_line_numbers(ui: &mut Ui, text: &str, scroll_id: &str) {
                 ui.painter().vline(
                     line_num_x + 8.0,
                     galley_pos.y..=galley_pos.y + galley.rect.height(),
-                    egui::Stroke::new(1.0, Color32::from_gray(50))
+                    egui::Stroke::new(1.0, Color32::from_gray(50)),
                 );
             });
         });
@@ -1118,8 +1163,8 @@ fn render_type_tree(
         return;
     }
 
-    let is_selected = node.struct_index.is_some()
-        && selected.map_or(false, |idx| Some(idx) == node.struct_index);
+    let is_selected =
+        node.struct_index.is_some() && selected.map_or(false, |idx| Some(idx) == node.struct_index);
 
     // Alternating background
     let row_bg = if *row_index % 2 == 1 {
@@ -1169,23 +1214,43 @@ fn render_type_tree(
                     egui::pos2(center.x + size, center.y - size * 0.5),
                     egui::pos2(center.x, center.y + size * 0.5),
                 ];
-                ui.painter().add(egui::Shape::convex_polygon(points, color, egui::Stroke::NONE));
+                ui.painter().add(egui::Shape::convex_polygon(
+                    points,
+                    color,
+                    egui::Stroke::NONE,
+                ));
             } else {
                 let points = vec![
                     egui::pos2(center.x - size * 0.5, center.y - size),
                     egui::pos2(center.x + size * 0.5, center.y),
                     egui::pos2(center.x - size * 0.5, center.y + size),
                 ];
-                ui.painter().add(egui::Shape::convex_polygon(points, color, egui::Stroke::NONE));
+                ui.painter().add(egui::Shape::convex_polygon(
+                    points,
+                    color,
+                    egui::Stroke::NONE,
+                ));
             }
         }
 
-        ui.label(RichText::new("[S]").color(Color32::from_rgb(180, 220, 140)).small().monospace());
+        ui.label(
+            RichText::new("[S]")
+                .color(Color32::from_rgb(180, 220, 140))
+                .small()
+                .monospace(),
+        );
 
-        let label_text = RichText::new(&node.name)
-            .monospace()
-            .color(if is_selected { Color32::from_rgb(100, 180, 255) } else { Color32::from_gray(200) });
-        let resp = ui.add(egui::Label::new(label_text).sense(Sense::click()).truncate())
+        let label_text = RichText::new(&node.name).monospace().color(if is_selected {
+            Color32::from_rgb(100, 180, 255)
+        } else {
+            Color32::from_gray(200)
+        });
+        let resp = ui
+            .add(
+                egui::Label::new(label_text)
+                    .sense(Sense::click())
+                    .truncate(),
+            )
             .on_hover_cursor(CursorIcon::Default);
         if resp.clicked() {
             if let Some(idx) = node.struct_index {
@@ -1206,20 +1271,60 @@ fn render_type_tree(
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         ui.add_space(8.0);
                         if out_enum_count > 0 {
-                            ui.label(RichText::new(format!("{}", out_enum_count)).monospace().small().color(Color32::from_gray(120)));
-                            ui.label(RichText::new("[E]").color(Color32::from_rgb(220, 180, 120)).small().monospace());
+                            ui.label(
+                                RichText::new(format!("{}", out_enum_count))
+                                    .monospace()
+                                    .small()
+                                    .color(Color32::from_gray(120)),
+                            );
+                            ui.label(
+                                RichText::new("[E]")
+                                    .color(Color32::from_rgb(220, 180, 120))
+                                    .small()
+                                    .monospace(),
+                            );
                         }
                         if out_struct_count > 0 {
-                            ui.label(RichText::new(format!("{}", out_struct_count)).monospace().small().color(Color32::from_gray(120)));
-                            ui.label(RichText::new("[S]").color(Color32::from_rgb(180, 220, 140)).small().monospace());
+                            ui.label(
+                                RichText::new(format!("{}", out_struct_count))
+                                    .monospace()
+                                    .small()
+                                    .color(Color32::from_gray(120)),
+                            );
+                            ui.label(
+                                RichText::new("[S]")
+                                    .color(Color32::from_rgb(180, 220, 140))
+                                    .small()
+                                    .monospace(),
+                            );
                         }
                         if out_struct_count > 0 || out_enum_count > 0 {
-                            ui.label(RichText::new("OUT").monospace().small().color(Color32::from_gray(80)));
+                            ui.label(
+                                RichText::new("OUT")
+                                    .monospace()
+                                    .small()
+                                    .color(Color32::from_gray(80)),
+                            );
                         }
                         if in_struct_count > 0 {
-                            ui.label(RichText::new(format!("{}", in_struct_count)).monospace().small().color(Color32::from_gray(120)));
-                            ui.label(RichText::new("[S]").color(Color32::from_rgb(180, 220, 140)).small().monospace());
-                            ui.label(RichText::new("IN").monospace().small().color(Color32::from_gray(80)));
+                            ui.label(
+                                RichText::new(format!("{}", in_struct_count))
+                                    .monospace()
+                                    .small()
+                                    .color(Color32::from_gray(120)),
+                            );
+                            ui.label(
+                                RichText::new("[S]")
+                                    .color(Color32::from_rgb(180, 220, 140))
+                                    .small()
+                                    .monospace(),
+                            );
+                            ui.label(
+                                RichText::new("IN")
+                                    .monospace()
+                                    .small()
+                                    .color(Color32::from_gray(80)),
+                            );
                         }
                     });
                 }
@@ -1229,13 +1334,26 @@ fn render_type_tree(
 
     if node.expanded {
         for child in &mut node.children {
-            render_type_tree(ui, child, search, selected, depth + 1, row_index, clicked_struct, struct_refs, db);
+            render_type_tree(
+                ui,
+                child,
+                search,
+                selected,
+                depth + 1,
+                row_index,
+                clicked_struct,
+                struct_refs,
+                db,
+            );
         }
     }
 }
 
 /// Count outgoing struct and enum references for a struct
-fn count_outgoing_refs(db: &svarog::datacore::DataCoreDatabase, struct_index: usize) -> (usize, usize) {
+fn count_outgoing_refs(
+    db: &svarog::datacore::DataCoreDatabase,
+    struct_index: usize,
+) -> (usize, usize) {
     use svarog::datacore::DataType;
 
     let mut struct_count = 0;
@@ -1260,10 +1378,10 @@ fn count_outgoing_refs(db: &svarog::datacore::DataCoreDatabase, struct_index: us
         let conv_type = DataType::from_u16(prop.conversion_type);
 
         match (data_type, conv_type) {
-            (Some(DataType::Class), _) |
-            (Some(DataType::StrongPointer), _) |
-            (Some(DataType::WeakPointer), _) |
-            (Some(DataType::Reference), _) => {
+            (Some(DataType::Class), _)
+            | (Some(DataType::StrongPointer), _)
+            | (Some(DataType::WeakPointer), _)
+            | (Some(DataType::Reference), _) => {
                 struct_count += 1;
             }
             (Some(DataType::EnumChoice), _) | (_, Some(DataType::EnumChoice)) => {
@@ -1311,16 +1429,22 @@ fn extract_struct_outgoing_refs(
         let conv_type = DataType::from_u16(prop.conversion_type);
 
         match (data_type, conv_type) {
-            (Some(DataType::Class), _) |
-            (Some(DataType::StrongPointer), _) |
-            (Some(DataType::WeakPointer), _) |
-            (Some(DataType::Reference), _) => {
+            (Some(DataType::Class), _)
+            | (Some(DataType::StrongPointer), _)
+            | (Some(DataType::WeakPointer), _)
+            | (Some(DataType::Reference), _) => {
                 let target_struct = prop.struct_index as usize;
                 if target_struct < struct_defs.len() {
-                    let target_name = db.struct_name(target_struct).unwrap_or("Unknown").to_string();
+                    let target_name = db
+                        .struct_name(target_struct)
+                        .unwrap_or("Unknown")
+                        .to_string();
                     refs.push(StructTypeReference {
                         property_name: prop_name,
-                        target_type: StructRefTarget::Struct { name: target_name, index: target_struct },
+                        target_type: StructRefTarget::Struct {
+                            name: target_name,
+                            index: target_struct,
+                        },
                         is_array: false,
                     });
                 }
@@ -1331,7 +1455,10 @@ fn extract_struct_outgoing_refs(
                     let target_name = db.enum_name(target_enum).unwrap_or("Unknown").to_string();
                     refs.push(StructTypeReference {
                         property_name: prop_name,
-                        target_type: StructRefTarget::Enum { name: target_name, index: target_enum },
+                        target_type: StructRefTarget::Enum {
+                            name: target_name,
+                            index: target_enum,
+                        },
                         is_array: false,
                     });
                 }
@@ -1358,16 +1485,21 @@ fn extract_references(
     let main_records: Vec<_> = db.main_records().collect();
 
     // Use the GUID map from reference index if available, otherwise build a local one
-    let guid_map: std::collections::HashMap<String, usize> = if let Some(ref_idx) = reference_index {
+    let guid_map: std::collections::HashMap<String, usize> = if let Some(ref_idx) = reference_index
+    {
         ref_idx.guid_to_index.clone()
     } else {
-        main_records.iter().enumerate()
+        main_records
+            .iter()
+            .enumerate()
             .map(|(idx, r)| (format!("{}", r.id), idx))
             .collect()
     };
 
     // Build instance map for pointer lookups
-    let instance_map: std::collections::HashMap<(u32, u32), usize> = main_records.iter().enumerate()
+    let instance_map: std::collections::HashMap<(u32, u32), usize> = main_records
+        .iter()
+        .enumerate()
         .map(|(idx, r)| ((r.struct_index as u32, r.instance_index as u32), idx))
         .collect();
 
@@ -1379,8 +1511,14 @@ fn extract_references(
 
                 if let Some(idx) = target_idx {
                     let target_record = main_records[idx];
-                    let target_name = db.record_name(target_record).unwrap_or("Unknown").to_string();
-                    let target_type = db.struct_name(target_record.struct_index as usize).unwrap_or("Unknown").to_string();
+                    let target_name = db
+                        .record_name(target_record)
+                        .unwrap_or("Unknown")
+                        .to_string();
+                    let target_type = db
+                        .struct_name(target_record.struct_index as usize)
+                        .unwrap_or("Unknown")
+                        .to_string();
 
                     refs.push(RecordReference {
                         property_name: prop.name.to_string(),
@@ -1406,11 +1544,18 @@ fn extract_references(
                 let ptr_struct_index = instance_ref.struct_index;
                 let ptr_instance_index = instance_ref.instance_index;
 
-                let target_type = db.struct_name(ptr_struct_index as usize).unwrap_or("Unknown").to_string();
-                let target_idx = instance_map.get(&(ptr_struct_index, ptr_instance_index)).copied();
+                let target_type = db
+                    .struct_name(ptr_struct_index as usize)
+                    .unwrap_or("Unknown")
+                    .to_string();
+                let target_idx = instance_map
+                    .get(&(ptr_struct_index, ptr_instance_index))
+                    .copied();
 
                 let target_name = if let Some(idx) = target_idx {
-                    db.record_name(main_records[idx]).unwrap_or("Unknown").to_string()
+                    db.record_name(main_records[idx])
+                        .unwrap_or("Unknown")
+                        .to_string()
                 } else {
                     format!("{}[{}]", target_type, ptr_instance_index)
                 };
@@ -1420,7 +1565,10 @@ fn extract_references(
                     ref_type: ReferenceType::StrongPointer,
                     target_name,
                     target_type: target_type.clone(),
-                    target_guid: format!("struct:{} instance:{}", ptr_struct_index, ptr_instance_index),
+                    target_guid: format!(
+                        "struct:{} instance:{}",
+                        ptr_struct_index, ptr_instance_index
+                    ),
                     target_record_index: target_idx,
                 });
             }
@@ -1428,11 +1576,18 @@ fn extract_references(
                 let ptr_struct_index = instance_ref.struct_index;
                 let ptr_instance_index = instance_ref.instance_index;
 
-                let target_type = db.struct_name(ptr_struct_index as usize).unwrap_or("Unknown").to_string();
-                let target_idx = instance_map.get(&(ptr_struct_index, ptr_instance_index)).copied();
+                let target_type = db
+                    .struct_name(ptr_struct_index as usize)
+                    .unwrap_or("Unknown")
+                    .to_string();
+                let target_idx = instance_map
+                    .get(&(ptr_struct_index, ptr_instance_index))
+                    .copied();
 
                 let target_name = if let Some(idx) = target_idx {
-                    db.record_name(main_records[idx]).unwrap_or("Unknown").to_string()
+                    db.record_name(main_records[idx])
+                        .unwrap_or("Unknown")
+                        .to_string()
                 } else {
                     format!("{}[{}]", target_type, ptr_instance_index)
                 };
@@ -1442,7 +1597,10 @@ fn extract_references(
                     ref_type: ReferenceType::WeakPointer,
                     target_name,
                     target_type: target_type.clone(),
-                    target_guid: format!("struct:{} instance:{}", ptr_struct_index, ptr_instance_index),
+                    target_guid: format!(
+                        "struct:{} instance:{}",
+                        ptr_struct_index, ptr_instance_index
+                    ),
                     target_record_index: target_idx,
                 });
             }
@@ -1453,7 +1611,8 @@ fn extract_references(
                     match array_ref.element_type {
                         ArrayElementType::Reference => {
                             // Try to expand array and show individual references
-                            let items = expand_reference_array(db, array_ref, &guid_map, &main_records);
+                            let items =
+                                expand_reference_array(db, array_ref, &guid_map, &main_records);
                             if items.is_empty() {
                                 refs.push(RecordReference {
                                     property_name: prop.name.to_string(),
@@ -1477,18 +1636,27 @@ fn extract_references(
                             }
                         }
                         ArrayElementType::StrongPointer | ArrayElementType::WeakPointer => {
-                            let ref_type = if array_ref.element_type == ArrayElementType::StrongPointer {
-                                ReferenceType::StrongPointer
-                            } else {
-                                ReferenceType::WeakPointer
-                            };
-                            let type_name = db.struct_name(array_ref.struct_index as usize).unwrap_or("Unknown");
+                            let ref_type =
+                                if array_ref.element_type == ArrayElementType::StrongPointer {
+                                    ReferenceType::StrongPointer
+                                } else {
+                                    ReferenceType::WeakPointer
+                                };
+                            let type_name = db
+                                .struct_name(array_ref.struct_index as usize)
+                                .unwrap_or("Unknown");
 
                             // Try to expand pointer arrays (up to 10 items)
                             if array_ref.count <= 10 {
-                                let items = expand_pointer_array(db, array_ref, &instance_map, &main_records);
+                                let items = expand_pointer_array(
+                                    db,
+                                    array_ref,
+                                    &instance_map,
+                                    &main_records,
+                                );
                                 if !items.is_empty() {
-                                    for (i, (name, type_name, idx)) in items.into_iter().enumerate() {
+                                    for (i, (name, type_name, idx)) in items.into_iter().enumerate()
+                                    {
                                         refs.push(RecordReference {
                                             property_name: format!("{}[{}]", prop.name, i),
                                             ref_type,
@@ -1502,7 +1670,10 @@ fn extract_references(
                                     refs.push(RecordReference {
                                         property_name: prop.name.to_string(),
                                         ref_type,
-                                        target_name: format!("[{} x {}]", array_ref.count, type_name),
+                                        target_name: format!(
+                                            "[{} x {}]",
+                                            array_ref.count, type_name
+                                        ),
                                         target_type: format!("Array<{}>", type_name),
                                         target_guid: String::new(),
                                         target_record_index: None,
@@ -1539,13 +1710,21 @@ fn extract_incoming_references(
 ) -> Vec<IncomingReference> {
     let mut incoming = Vec::new();
 
-    let Some(index) = reference_index else { return incoming };
+    let Some(index) = reference_index else {
+        return incoming;
+    };
 
     if let Some(refs) = index.incoming.get(&target_idx) {
         for (source_idx, property_name, ref_type) in refs {
             if let Some(source_record) = records.get(*source_idx) {
-                let source_name = db.record_name(source_record).unwrap_or("Unknown").to_string();
-                let source_type = db.struct_name(source_record.struct_index as usize).unwrap_or("Unknown").to_string();
+                let source_name = db
+                    .record_name(source_record)
+                    .unwrap_or("Unknown")
+                    .to_string();
+                let source_type = db
+                    .struct_name(source_record.struct_index as usize)
+                    .unwrap_or("Unknown")
+                    .to_string();
 
                 incoming.push(IncomingReference {
                     source_name,
@@ -1581,8 +1760,14 @@ fn expand_reference_array(
             let guid_str = format!("{}", ref_val.record_id);
             if let Some(&target_idx) = guid_map.get(&guid_str) {
                 let target_record = main_records[target_idx];
-                let target_name = db.record_name(target_record).unwrap_or("Unknown").to_string();
-                let target_type = db.struct_name(target_record.struct_index as usize).unwrap_or("Unknown").to_string();
+                let target_name = db
+                    .record_name(target_record)
+                    .unwrap_or("Unknown")
+                    .to_string();
+                let target_type = db
+                    .struct_name(target_record.struct_index as usize)
+                    .unwrap_or("Unknown")
+                    .to_string();
                 items.push((target_name, target_type, Some(target_idx)));
             } else {
                 items.push((guid_str, "Unknown".to_string(), None));
@@ -1612,7 +1797,10 @@ fn expand_pointer_array(
     }
 
     let struct_idx = array_ref.struct_index;
-    let type_name = db.struct_name(struct_idx as usize).unwrap_or("Unknown").to_string();
+    let type_name = db
+        .struct_name(struct_idx as usize)
+        .unwrap_or("Unknown")
+        .to_string();
 
     for i in 0..array_ref.count {
         let idx = array_ref.first_index as usize + i as usize;
@@ -1649,7 +1837,11 @@ fn expand_pointer_array(
 }
 
 /// Check if node or any children match search and type filter, auto-expand if needed
-fn check_and_expand_for_search(node: &mut DataCoreRecordNode, search: &str, type_filter: Option<&str>) -> bool {
+fn check_and_expand_for_search(
+    node: &mut DataCoreRecordNode,
+    search: &str,
+    type_filter: Option<&str>,
+) -> bool {
     let self_matches = matches_filters(node, search, type_filter);
     let mut any_child_matches = false;
 
@@ -1701,7 +1893,10 @@ fn render_record_tree(
         true
     } else {
         matches_filters(node, search, type_filter)
-            || node.children.iter().any(|c| node_matches_search(c, search, type_filter))
+            || node
+                .children
+                .iter()
+                .any(|c| node_matches_search(c, search, type_filter))
     };
 
     if !show_node {
@@ -1710,7 +1905,9 @@ fn render_record_tree(
 
     let is_selected = !node.is_folder
         && node.record_index.is_some()
-        && selected.as_ref().map_or(false, |s| Some(*s) == node.record_index);
+        && selected
+            .as_ref()
+            .map_or(false, |s| Some(*s) == node.record_index);
 
     // Alternating background
     let row_bg = if *row_index % 2 == 1 {
@@ -1726,106 +1923,112 @@ fn render_record_tree(
     ui.painter().rect_filled(row_rect, 0.0, row_bg);
 
     ui.horizontal(|ui| {
-                let indent = depth as f32 * 16.0;
-                if depth > 0 {
-                    let rect = ui.available_rect_before_wrap();
-                    for d in 0..depth {
-                        let x = rect.left() + (d as f32 * 16.0) + 8.0;
-                        ui.painter().line_segment(
-                            [egui::pos2(x, rect.top()), egui::pos2(x, rect.bottom())],
-                            egui::Stroke::new(1.0, Color32::from_gray(60)),
-                        );
-                    }
+        let indent = depth as f32 * 16.0;
+        if depth > 0 {
+            let rect = ui.available_rect_before_wrap();
+            for d in 0..depth {
+                let x = rect.left() + (d as f32 * 16.0) + 8.0;
+                ui.painter().line_segment(
+                    [egui::pos2(x, rect.top()), egui::pos2(x, rect.bottom())],
+                    egui::Stroke::new(1.0, Color32::from_gray(60)),
+                );
+            }
+        }
+        ui.add_space(indent);
+
+        // Expand/collapse triangle
+        if node.is_folder && !node.children.is_empty() {
+            let (rect, response) = ui.allocate_exact_size(Vec2::splat(16.0), Sense::click());
+
+            if response.clicked() {
+                node.expanded = !node.expanded;
+            }
+
+            let center = rect.center();
+            let size = 5.0;
+            let color = if response.hovered() {
+                Color32::WHITE
+            } else {
+                Color32::from_gray(180)
+            };
+
+            if node.expanded {
+                let points = vec![
+                    egui::pos2(center.x - size, center.y - size * 0.5),
+                    egui::pos2(center.x + size, center.y - size * 0.5),
+                    egui::pos2(center.x, center.y + size * 0.5),
+                ];
+                ui.painter().add(egui::Shape::convex_polygon(
+                    points,
+                    color,
+                    egui::Stroke::NONE,
+                ));
+            } else {
+                let points = vec![
+                    egui::pos2(center.x - size * 0.5, center.y - size),
+                    egui::pos2(center.x + size * 0.5, center.y),
+                    egui::pos2(center.x - size * 0.5, center.y + size),
+                ];
+                ui.painter().add(egui::Shape::convex_polygon(
+                    points,
+                    color,
+                    egui::Stroke::NONE,
+                ));
+            }
+        } else {
+            ui.add_space(16.0);
+        }
+
+        // Icon - use text characters that render reliably
+        let (icon, icon_color) = if node.is_folder {
+            ("[D]", Color32::from_rgb(255, 200, 100))
+        } else if node.has_references {
+            ("[*]", Color32::from_rgb(180, 160, 220))
+        } else {
+            ("[R]", Color32::from_rgb(150, 200, 255))
+        };
+        ui.label(RichText::new(icon).color(icon_color).small().monospace());
+
+        // Name
+        let name_color = if is_selected {
+            Color32::from_rgb(100, 180, 255)
+        } else if !search.is_empty() && node.name.to_lowercase().contains(search) {
+            Color32::from_rgb(255, 220, 100)
+        } else {
+            Color32::from_gray(220)
+        };
+
+        let name_text = RichText::new(&node.name).color(name_color);
+        let name_response = ui.selectable_label(is_selected, name_text);
+
+        if name_response.clicked() {
+            if node.is_folder {
+                node.expanded = !node.expanded;
+            } else if let Some(idx) = node.record_index {
+                *navigate_to = Some(idx);
+            }
+        }
+
+        // Type for records (right-aligned, clickable)
+        if !node.is_folder {
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let type_text = RichText::new(&node.type_name)
+                    .color(Color32::from_gray(100))
+                    .small();
+
+                let type_response = ui.add(egui::Label::new(type_text).sense(Sense::click()));
+
+                if type_response.clicked() {
+                    *new_type_filter = Some(node.type_name.clone());
                 }
-                ui.add_space(indent);
 
-                // Expand/collapse triangle
-                if node.is_folder && !node.children.is_empty() {
-                    let (rect, response) = ui.allocate_exact_size(Vec2::splat(16.0), Sense::click());
-
-                    if response.clicked() {
-                        node.expanded = !node.expanded;
-                    }
-
-                    let center = rect.center();
-                    let size = 5.0;
-                    let color = if response.hovered() {
-                        Color32::WHITE
-                    } else {
-                        Color32::from_gray(180)
-                    };
-
-                    if node.expanded {
-                        let points = vec![
-                            egui::pos2(center.x - size, center.y - size * 0.5),
-                            egui::pos2(center.x + size, center.y - size * 0.5),
-                            egui::pos2(center.x, center.y + size * 0.5),
-                        ];
-                        ui.painter().add(egui::Shape::convex_polygon(points, color, egui::Stroke::NONE));
-                    } else {
-                        let points = vec![
-                            egui::pos2(center.x - size * 0.5, center.y - size),
-                            egui::pos2(center.x + size * 0.5, center.y),
-                            egui::pos2(center.x - size * 0.5, center.y + size),
-                        ];
-                        ui.painter().add(egui::Shape::convex_polygon(points, color, egui::Stroke::NONE));
-                    }
-                } else {
-                    ui.add_space(16.0);
+                if type_response.hovered() {
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
 
-                // Icon - use text characters that render reliably
-                let (icon, icon_color) = if node.is_folder {
-                    ("[D]", Color32::from_rgb(255, 200, 100))
-                } else if node.has_references {
-                    ("[*]", Color32::from_rgb(180, 160, 220))
-                } else {
-                    ("[R]", Color32::from_rgb(150, 200, 255))
-                };
-                ui.label(RichText::new(icon).color(icon_color).small().monospace());
-
-                // Name
-                let name_color = if is_selected {
-                    Color32::from_rgb(100, 180, 255)
-                } else if !search.is_empty() && node.name.to_lowercase().contains(search) {
-                    Color32::from_rgb(255, 220, 100)
-                } else {
-                    Color32::from_gray(220)
-                };
-
-                let name_text = RichText::new(&node.name).color(name_color);
-                let name_response = ui.selectable_label(is_selected, name_text);
-
-                if name_response.clicked() {
-                    if node.is_folder {
-                        node.expanded = !node.expanded;
-                    } else if let Some(idx) = node.record_index {
-                        *navigate_to = Some(idx);
-                    }
-                }
-
-                // Type for records (right-aligned, clickable)
-                if !node.is_folder {
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        let type_text = RichText::new(&node.type_name)
-                            .color(Color32::from_gray(100))
-                            .small();
-
-                        let type_response = ui.add(
-                            egui::Label::new(type_text).sense(Sense::click())
-                        );
-
-                        if type_response.clicked() {
-                            *new_type_filter = Some(node.type_name.clone());
-                        }
-
-                        if type_response.hovered() {
-                            ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
-                        }
-
-                        type_response.on_hover_text("Click to filter by this type");
-                    });
-                }
+                type_response.on_hover_text("Click to filter by this type");
+            });
+        }
     });
 
     if node.expanded && node.is_folder {
@@ -1852,9 +2055,14 @@ fn node_matches_search(node: &DataCoreRecordNode, search: &str, type_filter: Opt
     if matches_filters(node, search, type_filter) {
         return true;
     }
-    node.children.iter().any(|c| node_matches_search(c, search, type_filter))
+    node.children
+        .iter()
+        .any(|c| node_matches_search(c, search, type_filter))
 }
-fn export_current(db: &Arc<svarog::datacore::DataCoreDatabase>, state: &mut AppState) -> Result<(), String> {
+fn export_current(
+    db: &Arc<svarog::datacore::DataCoreDatabase>,
+    state: &mut AppState,
+) -> Result<(), String> {
     let dialog = rfd::FileDialog::new();
     match state.datacore_page {
         DataCorePage::Structs => {
@@ -1901,12 +2109,18 @@ fn export_current(db: &Arc<svarog::datacore::DataCoreDatabase>, state: &mut AppS
     }
 }
 
-fn export_all(db: &Arc<svarog::datacore::DataCoreDatabase>, state: &mut AppState) -> Result<(), String> {
+fn export_all(
+    db: &Arc<svarog::datacore::DataCoreDatabase>,
+    state: &mut AppState,
+) -> Result<(), String> {
     match state.datacore_page {
         DataCorePage::Structs => {
             let exporter = svarog::datacore::CHeaderExporter::new(db);
             let buf = exporter.export_all();
-            if let Some(path) = rfd::FileDialog::new().set_file_name("structs.h").save_file() {
+            if let Some(path) = rfd::FileDialog::new()
+                .set_file_name("structs.h")
+                .save_file()
+            {
                 std::fs::write(&path, buf).map_err(|e| e.to_string())
             } else {
                 Ok(())
@@ -1918,7 +2132,10 @@ fn export_all(db: &Arc<svarog::datacore::DataCoreDatabase>, state: &mut AppState
                 buf.push_str(&generate_enum_preview(db, idx));
                 buf.push('\n');
             }
-            if let Some(path) = rfd::FileDialog::new().set_file_name("enums.txt").save_file() {
+            if let Some(path) = rfd::FileDialog::new()
+                .set_file_name("enums.txt")
+                .save_file()
+            {
                 std::fs::write(&path, buf).map_err(|e| e.to_string())
             } else {
                 Ok(())

@@ -8,30 +8,41 @@ use svarog::cryxml::CryXml;
 use svarog::datacore::DataCoreDatabase;
 use svarog::p4k::P4kArchive;
 
-use crate::state::{IncomingStructReference, PreviewData, ReferenceIndex, ReferenceType, StructReferenceIndex, WorkerMessage};
+use crate::state::{
+    IncomingStructReference, PreviewData, ReferenceIndex, ReferenceType, StructReferenceIndex,
+    WorkerMessage,
+};
 
 /// Load a P4K archive in a background thread
 pub fn load_p4k(path: impl AsRef<Path>, sender: Sender<WorkerMessage>) {
     let path = path.as_ref().to_owned();
     std::thread::spawn(move || {
-        sender.send(WorkerMessage::P4kProgress {
-            current: 0,
-            total: 1,
-            stage: "Opening archive...".to_string(),
-        }).ok();
+        sender
+            .send(WorkerMessage::P4kProgress {
+                current: 0,
+                total: 1,
+                stage: "Opening archive...".to_string(),
+            })
+            .ok();
 
         match P4kArchive::open(&path) {
             Ok(archive) => {
                 let count = archive.entry_count();
-                sender.send(WorkerMessage::P4kProgress {
-                    current: count,
-                    total: count,
-                    stage: format!("Loaded {} entries", count),
-                }).ok();
-                sender.send(WorkerMessage::P4kLoaded(Ok(Arc::new(archive)))).ok();
+                sender
+                    .send(WorkerMessage::P4kProgress {
+                        current: count,
+                        total: count,
+                        stage: format!("Loaded {} entries", count),
+                    })
+                    .ok();
+                sender
+                    .send(WorkerMessage::P4kLoaded(Ok(Arc::new(archive))))
+                    .ok();
             }
             Err(e) => {
-                sender.send(WorkerMessage::P4kLoaded(Err(e.to_string()))).ok();
+                sender
+                    .send(WorkerMessage::P4kLoaded(Err(e.to_string())))
+                    .ok();
             }
         }
     });
@@ -40,22 +51,30 @@ pub fn load_p4k(path: impl AsRef<Path>, sender: Sender<WorkerMessage>) {
 /// Load DataCore database in a background thread
 pub fn load_datacore(data: Vec<u8>, sender: Sender<WorkerMessage>) {
     std::thread::spawn(move || {
-        sender.send(WorkerMessage::DataCoreProgress {
-            current: 0,
-            total: 1,
-        }).ok();
+        sender
+            .send(WorkerMessage::DataCoreProgress {
+                current: 0,
+                total: 1,
+            })
+            .ok();
 
         match DataCoreDatabase::parse(&data) {
             Ok(db) => {
                 let count = db.records().len();
-                sender.send(WorkerMessage::DataCoreProgress {
-                    current: count,
-                    total: count,
-                }).ok();
-                sender.send(WorkerMessage::DataCoreLoaded(Ok(Arc::new(db)))).ok();
+                sender
+                    .send(WorkerMessage::DataCoreProgress {
+                        current: count,
+                        total: count,
+                    })
+                    .ok();
+                sender
+                    .send(WorkerMessage::DataCoreLoaded(Ok(Arc::new(db))))
+                    .ok();
             }
             Err(e) => {
-                sender.send(WorkerMessage::DataCoreLoaded(Err(e.to_string()))).ok();
+                sender
+                    .send(WorkerMessage::DataCoreLoaded(Err(e.to_string())))
+                    .ok();
             }
         }
     });
@@ -67,7 +86,9 @@ pub fn load_preview(archive: Arc<P4kArchive>, entry_index: usize, sender: Sender
         let entry = match archive.get(entry_index) {
             Some(e) => e,
             None => {
-                sender.send(WorkerMessage::FilePreviewReady(PreviewData::None)).ok();
+                sender
+                    .send(WorkerMessage::FilePreviewReady(PreviewData::None))
+                    .ok();
                 return;
             }
         };
@@ -76,8 +97,12 @@ pub fn load_preview(archive: Arc<P4kArchive>, entry_index: usize, sender: Sender
         let data = match archive.read_index(entry_index) {
             Ok(d) => d,
             Err(e) => {
-                sender.send(WorkerMessage::Error(format!("Failed to read file: {}", e))).ok();
-                sender.send(WorkerMessage::FilePreviewReady(PreviewData::None)).ok();
+                sender
+                    .send(WorkerMessage::Error(format!("Failed to read file: {}", e)))
+                    .ok();
+                sender
+                    .send(WorkerMessage::FilePreviewReady(PreviewData::None))
+                    .ok();
                 return;
             }
         };
@@ -92,21 +117,35 @@ fn determine_preview(data: &[u8], name_lower: &str) -> PreviewData {
     // Check for CryXML binary
     if CryXml::is_cryxml(data) {
         match CryXml::parse(data) {
-            Ok(xml) => {
-                match xml.to_xml_string() {
-                    Ok(text) => return PreviewData::Text(text),
-                    Err(_) => {}
-                }
-            }
+            Ok(xml) => match xml.to_xml_string() {
+                Ok(text) => return PreviewData::Text(text),
+                Err(_) => {}
+            },
             Err(_) => {}
         }
     }
 
     // Check for text files
     let text_extensions = [
-        ".xml", ".txt", ".cfg", ".json", ".eco", ".lua", ".mtl", ".cdf",
-        ".chrparams", ".adb", ".animevents", ".bspace", ".log", ".ini",
-        ".csv", ".md", ".html", ".css", ".js",
+        ".xml",
+        ".txt",
+        ".cfg",
+        ".json",
+        ".eco",
+        ".lua",
+        ".mtl",
+        ".cdf",
+        ".chrparams",
+        ".adb",
+        ".animevents",
+        ".bspace",
+        ".log",
+        ".ini",
+        ".csv",
+        ".md",
+        ".html",
+        ".css",
+        ".js",
     ];
 
     for ext in &text_extensions {
@@ -114,7 +153,15 @@ fn determine_preview(data: &[u8], name_lower: &str) -> PreviewData {
             // Try to parse as UTF-8 text
             if let Ok(text) = String::from_utf8(data.to_vec()) {
                 // Check if it's actually text (no binary chars)
-                if text.chars().all(|c| c.is_ascii() || c.is_alphanumeric() || c.is_whitespace() || c == '\n' || c == '\r' || c == '\t') || !text.contains('\0') {
+                if text.chars().all(|c| {
+                    c.is_ascii()
+                        || c.is_alphanumeric()
+                        || c.is_whitespace()
+                        || c == '\n'
+                        || c == '\r'
+                        || c == '\t'
+                }) || !text.contains('\0')
+                {
                     return PreviewData::Text(text);
                 }
             }
@@ -160,7 +207,7 @@ pub fn build_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<WorkerMes
     let db2 = db.clone();
 
     std::thread::spawn(move || {
-        use svarog::datacore::{Value, ArrayElementType};
+        use svarog::datacore::{ArrayElementType, Value};
 
         let mut incoming: std::collections::HashMap<usize, Vec<(usize, String, ReferenceType)>> =
             std::collections::HashMap::new();
@@ -178,7 +225,10 @@ pub fn build_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<WorkerMes
         let mut instance_to_index: std::collections::HashMap<(u32, u32), usize> =
             std::collections::HashMap::new();
         for (idx, record) in main_records.iter().enumerate() {
-            instance_to_index.insert((record.struct_index as u32, record.instance_index as u32), idx);
+            instance_to_index.insert(
+                (record.struct_index as u32, record.instance_index as u32),
+                idx,
+            );
         }
 
         for (source_idx, record) in main_records.iter().enumerate() {
@@ -189,28 +239,31 @@ pub fn build_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<WorkerMes
                     Value::Reference(Some(record_ref)) => {
                         let guid_str = format!("{}", record_ref.guid);
                         if let Some(&target_idx) = guid_to_index.get(&guid_str) {
-                            incoming
-                                .entry(target_idx)
-                                .or_default()
-                                .push((source_idx, prop.name.to_string(), ReferenceType::Reference));
+                            incoming.entry(target_idx).or_default().push((
+                                source_idx,
+                                prop.name.to_string(),
+                                ReferenceType::Reference,
+                            ));
                         }
                     }
                     Value::StrongPointer(Some(instance_ref)) => {
                         let key = (instance_ref.struct_index, instance_ref.instance_index);
                         if let Some(&target_idx) = instance_to_index.get(&key) {
-                            incoming
-                                .entry(target_idx)
-                                .or_default()
-                                .push((source_idx, prop.name.to_string(), ReferenceType::StrongPointer));
+                            incoming.entry(target_idx).or_default().push((
+                                source_idx,
+                                prop.name.to_string(),
+                                ReferenceType::StrongPointer,
+                            ));
                         }
                     }
                     Value::WeakPointer(Some(instance_ref)) => {
                         let key = (instance_ref.struct_index, instance_ref.instance_index);
                         if let Some(&target_idx) = instance_to_index.get(&key) {
-                            incoming
-                                .entry(target_idx)
-                                .or_default()
-                                .push((source_idx, prop.name.to_string(), ReferenceType::WeakPointer));
+                            incoming.entry(target_idx).or_default().push((
+                                source_idx,
+                                prop.name.to_string(),
+                                ReferenceType::WeakPointer,
+                            ));
                         }
                     }
                     Value::Array(array_ref) => {
@@ -221,17 +274,21 @@ pub fn build_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<WorkerMes
                                         let idx = array_ref.first_index as usize + i as usize;
                                         if let Some(ref_val) = db.reference_value(idx) {
                                             let guid_str = format!("{}", ref_val.record_id);
-                                            if let Some(&target_idx) = guid_to_index.get(&guid_str) {
-                                                incoming
-                                                    .entry(target_idx)
-                                                    .or_default()
-                                                    .push((source_idx, format!("{}[{}]", prop.name, i), ReferenceType::Reference));
+                                            if let Some(&target_idx) = guid_to_index.get(&guid_str)
+                                            {
+                                                incoming.entry(target_idx).or_default().push((
+                                                    source_idx,
+                                                    format!("{}[{}]", prop.name, i),
+                                                    ReferenceType::Reference,
+                                                ));
                                             }
                                         }
                                     }
                                 }
                                 ArrayElementType::StrongPointer | ArrayElementType::WeakPointer => {
-                                    let ref_type = if array_ref.element_type == ArrayElementType::StrongPointer {
+                                    let ref_type = if array_ref.element_type
+                                        == ArrayElementType::StrongPointer
+                                    {
                                         ReferenceType::StrongPointer
                                     } else {
                                         ReferenceType::WeakPointer
@@ -246,12 +303,16 @@ pub fn build_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<WorkerMes
                                         };
 
                                         if let Some(ptr) = ptr {
-                                            let key = (ptr.struct_index as u32, ptr.instance_index as u32);
+                                            let key = (
+                                                ptr.struct_index as u32,
+                                                ptr.instance_index as u32,
+                                            );
                                             if let Some(&target_idx) = instance_to_index.get(&key) {
-                                                incoming
-                                                    .entry(target_idx)
-                                                    .or_default()
-                                                    .push((source_idx, format!("{}[{}]", prop.name, i), ref_type));
+                                                incoming.entry(target_idx).or_default().push((
+                                                    source_idx,
+                                                    format!("{}[{}]", prop.name, i),
+                                                    ref_type,
+                                                ));
                                             }
                                         }
                                     }
@@ -265,10 +326,14 @@ pub fn build_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<WorkerMes
             }
         }
 
-        sender.send(WorkerMessage::ReferenceIndexReady(Arc::new(ReferenceIndex {
-            incoming,
-            guid_to_index,
-        }))).ok();
+        sender
+            .send(WorkerMessage::ReferenceIndexReady(Arc::new(
+                ReferenceIndex {
+                    incoming,
+                    guid_to_index,
+                },
+            )))
+            .ok();
     });
 
     // Build struct reference index in parallel
@@ -306,10 +371,10 @@ fn build_struct_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<Worker
             let conv_type = DataType::from_u16(prop.conversion_type);
 
             match (data_type, conv_type) {
-                (Some(DataType::Class), _) |
-                (Some(DataType::StrongPointer), _) |
-                (Some(DataType::WeakPointer), _) |
-                (Some(DataType::Reference), _) => {
+                (Some(DataType::Class), _)
+                | (Some(DataType::StrongPointer), _)
+                | (Some(DataType::WeakPointer), _)
+                | (Some(DataType::Reference), _) => {
                     let target_struct = prop.struct_index as usize;
                     if target_struct < struct_defs.len() {
                         struct_refs
@@ -339,7 +404,10 @@ fn build_struct_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<Worker
         std::collections::HashMap::new();
 
     for ((target_struct, source_struct), property_names) in struct_refs {
-        let source_name = db.struct_name(source_struct).unwrap_or("Unknown").to_string();
+        let source_name = db
+            .struct_name(source_struct)
+            .unwrap_or("Unknown")
+            .to_string();
         incoming
             .entry(target_struct)
             .or_default()
@@ -351,7 +419,10 @@ fn build_struct_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<Worker
     }
 
     for ((target_enum, source_struct), property_names) in enum_refs {
-        let source_name = db.struct_name(source_struct).unwrap_or("Unknown").to_string();
+        let source_name = db
+            .struct_name(source_struct)
+            .unwrap_or("Unknown")
+            .to_string();
         enum_incoming
             .entry(target_enum)
             .or_default()
@@ -370,8 +441,12 @@ fn build_struct_reference_index(db: Arc<DataCoreDatabase>, sender: Sender<Worker
         refs.sort_by(|a, b| a.source_name.cmp(&b.source_name));
     }
 
-    sender.send(WorkerMessage::StructReferenceIndexReady(Arc::new(StructReferenceIndex {
-        incoming,
-        enum_incoming,
-    }))).ok();
+    sender
+        .send(WorkerMessage::StructReferenceIndexReady(Arc::new(
+            StructReferenceIndex {
+                incoming,
+                enum_incoming,
+            },
+        )))
+        .ok();
 }

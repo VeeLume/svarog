@@ -1,6 +1,6 @@
 //! P4K archive browser panel
 
-use eframe::egui::{self, Color32, RichText, ScrollArea, Ui, Sense, Vec2};
+use eframe::egui::{self, Color32, RichText, ScrollArea, Sense, Ui, Vec2};
 use std::sync::Arc;
 
 use crate::preview::render_preview;
@@ -12,19 +12,19 @@ use crate::worker;
 fn text_file_icon(name: &str) -> &'static str {
     let lower = name.to_lowercase();
     if lower.ends_with(".xml") || lower.ends_with(".mtl") || lower.ends_with(".cdf") {
-        "[X]"  // XML
+        "[X]" // XML
     } else if lower.ends_with(".dds") || lower.ends_with(".png") || lower.ends_with(".jpg") {
-        "[I]"  // Image
+        "[I]" // Image
     } else if lower.ends_with(".socpak") {
-        "[P]"  // Package
+        "[P]" // Package
     } else if lower.ends_with(".dcb") {
-        "[B]"  // Binary database
+        "[B]" // Binary database
     } else if lower.ends_with(".chf") {
-        "[C]"  // Character
+        "[C]" // Character
     } else if lower.ends_with(".lua") || lower.ends_with(".cfg") {
-        "[S]"  // Script/config
+        "[S]" // Script/config
     } else {
-        "[F]"  // File
+        "[F]" // File
     }
 }
 
@@ -69,7 +69,7 @@ impl P4kBrowserPanel {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.label(
                         RichText::new(path.file_name().unwrap_or_default().to_string_lossy())
-                            .color(Color32::LIGHT_BLUE)
+                            .color(Color32::LIGHT_BLUE),
                     );
                 });
             }
@@ -139,12 +139,12 @@ impl P4kBrowserPanel {
                             ui.label(
                                 RichText::new(text_file_icon(selected))
                                     .monospace()
-                                    .color(Color32::from_gray(150))
+                                    .color(Color32::from_gray(150)),
                             );
                             ui.label(
                                 RichText::new(selected)
                                     .monospace()
-                                    .color(Color32::LIGHT_BLUE)
+                                    .color(Color32::LIGHT_BLUE),
                             );
                         });
                         ui.separator();
@@ -158,7 +158,11 @@ impl P4kBrowserPanel {
             ui.centered_and_justified(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(100.0);
-                    ui.label(RichText::new("[P4K]").size(48.0).color(Color32::from_gray(80)));
+                    ui.label(
+                        RichText::new("[P4K]")
+                            .size(48.0)
+                            .color(Color32::from_gray(80)),
+                    );
                     ui.add_space(20.0);
                     ui.label(RichText::new("No P4K archive loaded").size(20.0));
                     ui.add_space(10.0);
@@ -218,7 +222,7 @@ fn render_tree_node(
     let row_bg = if *row_index % 2 == 0 {
         Color32::TRANSPARENT
     } else {
-        Color32::from_rgba_unmultiplied(255, 255, 255, 1)  // 75% less opaque
+        Color32::from_rgba_unmultiplied(255, 255, 255, 1) // 75% less opaque
     };
     *row_index += 1;
 
@@ -244,7 +248,8 @@ fn render_tree_node(
 
                 // Expand/collapse triangle
                 if node.is_directory && !node.children.is_empty() {
-                    let (rect, response) = ui.allocate_exact_size(Vec2::splat(16.0), Sense::click());
+                    let (rect, response) =
+                        ui.allocate_exact_size(Vec2::splat(16.0), Sense::click());
 
                     if response.clicked() {
                         node.expanded = !node.expanded;
@@ -266,7 +271,11 @@ fn render_tree_node(
                             egui::pos2(center.x + size, center.y - size * 0.5),
                             egui::pos2(center.x, center.y + size * 0.5),
                         ];
-                        ui.painter().add(egui::Shape::convex_polygon(points, color, egui::Stroke::NONE));
+                        ui.painter().add(egui::Shape::convex_polygon(
+                            points,
+                            color,
+                            egui::Stroke::NONE,
+                        ));
                     } else {
                         // Right triangle
                         let points = vec![
@@ -274,7 +283,11 @@ fn render_tree_node(
                             egui::pos2(center.x + size * 0.5, center.y),
                             egui::pos2(center.x - size * 0.5, center.y + size),
                         ];
-                        ui.painter().add(egui::Shape::convex_polygon(points, color, egui::Stroke::NONE));
+                        ui.painter().add(egui::Shape::convex_polygon(
+                            points,
+                            color,
+                            egui::Stroke::NONE,
+                        ));
                     }
                 } else {
                     ui.add_space(16.0);
@@ -292,7 +305,7 @@ fn render_tree_node(
                 let name_color = if is_selected {
                     Color32::from_rgb(100, 180, 255)
                 } else if !filter.is_empty() && node.name.to_lowercase().contains(filter) {
-                    Color32::from_rgb(255, 220, 100)  // Highlight matching text
+                    Color32::from_rgb(255, 220, 100) // Highlight matching text
                 } else {
                     Color32::from_gray(220)
                 };
@@ -316,12 +329,17 @@ fn render_tree_node(
                 if !node.is_directory {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if node.is_encrypted {
-                            ui.label(RichText::new("[E]").small().monospace().color(Color32::from_rgb(255, 150, 150)));
+                            ui.label(
+                                RichText::new("[E]")
+                                    .small()
+                                    .monospace()
+                                    .color(Color32::from_rgb(255, 150, 150)),
+                            );
                         }
                         ui.label(
                             RichText::new(format_size(node.size))
                                 .color(Color32::from_gray(120))
-                                .small()
+                                .small(),
                         );
                     });
                 }

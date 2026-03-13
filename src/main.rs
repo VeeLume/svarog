@@ -255,7 +255,11 @@ fn main() -> Result<()> {
                 parallel,
             )?;
         }
-        Commands::P4kList { p4k, filter, detailed } => {
+        Commands::P4kList {
+            p4k,
+            filter,
+            detailed,
+        } => {
             cmd_p4k_list(&p4k, filter.as_deref(), detailed)?;
         }
         Commands::CryxmlConvert { input, output } => {
@@ -264,7 +268,11 @@ fn main() -> Result<()> {
         Commands::CryxmlCreate { input, output } => {
             cmd_cryxml_create(&input, &output)?;
         }
-        Commands::DcbExtract { input, output, filter } => {
+        Commands::DcbExtract {
+            input,
+            output,
+            filter,
+        } => {
             cmd_dcb_extract(&input, &output, filter.as_deref())?;
         }
         Commands::ChfProcess { input, output } => {
@@ -304,7 +312,10 @@ impl CaseInsensitivePathMapper {
     /// to merge with existing P4K extracts (mixed case).
     fn resolve(&self, base: &Path, relative: &str) -> PathBuf {
         let mut result = base.to_path_buf();
-        let components: Vec<&str> = relative.split(['/', '\\']).filter(|s| !s.is_empty()).collect();
+        let components: Vec<&str> = relative
+            .split(['/', '\\'])
+            .filter(|s| !s.is_empty())
+            .collect();
 
         for (i, component) in components.iter().enumerate() {
             let is_last = i == components.len() - 1;
@@ -378,10 +389,14 @@ struct SocpakExtractionResult {
 
 /// Extract a SOCPAK (which is just a ZIP file) to a directory.
 /// Also decodes any CryXML files found inside.
-fn extract_socpak(data: &[u8], output_dir: &Path, pb: Option<&ProgressBar>) -> Result<SocpakExtractionResult> {
+fn extract_socpak(
+    data: &[u8],
+    output_dir: &Path,
+    pb: Option<&ProgressBar>,
+) -> Result<SocpakExtractionResult> {
     let cursor = Cursor::new(data);
-    let mut archive = zip::ZipArchive::new(cursor)
-        .context("Failed to open SOCPAK as ZIP archive")?;
+    let mut archive =
+        zip::ZipArchive::new(cursor).context("Failed to open SOCPAK as ZIP archive")?;
 
     let mut extracted = 0;
     let mut cryxml_decoded = 0;
@@ -536,11 +551,17 @@ fn cmd_p4k_extract(
     let start = Instant::now();
     let archive = P4kArchive::open(p4k_path).context("Failed to open P4K archive")?;
 
-    println!("Loaded {} entries in {:?}", archive.entry_count(), start.elapsed());
+    println!(
+        "Loaded {} entries in {:?}",
+        archive.entry_count(),
+        start.elapsed()
+    );
 
     // Compile regex if using regex mode
     let regex_filter = if use_regex {
-        filter.map(|p| regex::Regex::new(p).context("Invalid regex pattern")).transpose()?
+        filter
+            .map(|p| regex::Regex::new(p).context("Invalid regex pattern"))
+            .transpose()?
     } else {
         None
     };
@@ -873,9 +894,7 @@ fn cmd_p4k_extract(
             let mut dcb_errors = 0;
 
             for record in &records_to_export {
-                let file_name = database
-                    .record_file_name(record)
-                    .unwrap_or("unknown.xml");
+                let file_name = database.record_file_name(record).unwrap_or("unknown.xml");
 
                 // Update progress with current file
                 set_progress_message(&dcb_pb, Stage::DcbExport, file_name);
@@ -952,7 +971,11 @@ fn cmd_p4k_list(p4k_path: &PathBuf, filter: Option<&str>, detailed: bool) -> Res
 }
 
 fn cmd_cryxml_convert(input: &PathBuf, output: &PathBuf) -> Result<()> {
-    println!("Converting CryXmlB to XML: {} -> {}", input.display(), output.display());
+    println!(
+        "Converting CryXmlB to XML: {} -> {}",
+        input.display(),
+        output.display()
+    );
 
     let data = fs::read(input).context("Failed to read input file")?;
 
@@ -972,7 +995,11 @@ fn cmd_cryxml_convert(input: &PathBuf, output: &PathBuf) -> Result<()> {
 fn cmd_cryxml_create(input: &PathBuf, output: &PathBuf) -> Result<()> {
     use svarog::cryxml::builder::CryXmlBuilder;
 
-    println!("Converting XML to CryXmlB: {} -> {}", input.display(), output.display());
+    println!(
+        "Converting XML to CryXmlB: {} -> {}",
+        input.display(),
+        output.display()
+    );
 
     let xml = fs::read_to_string(input).context("Failed to read input file")?;
 
@@ -980,7 +1007,10 @@ fn cmd_cryxml_create(input: &PathBuf, output: &PathBuf) -> Result<()> {
     let cryxml_bytes = builder.build().context("Failed to build CryXmlB")?;
     fs::write(output, cryxml_bytes).context("Failed to write output file")?;
 
-    println!("Conversion complete ({} bytes)", fs::metadata(output)?.len());
+    println!(
+        "Conversion complete ({} bytes)",
+        fs::metadata(output)?.len()
+    );
 
     Ok(())
 }
@@ -1016,7 +1046,11 @@ fn cmd_dcb_extract(input: &PathBuf, output: &PathBuf, filter: Option<&str>) -> R
         main_records
     };
 
-    println!("Exporting {} records to {}...", filtered_records.len(), output.display());
+    println!(
+        "Exporting {} records to {}...",
+        filtered_records.len(),
+        output.display()
+    );
 
     fs::create_dir_all(output)?;
 
@@ -1024,7 +1058,9 @@ fn cmd_dcb_extract(input: &PathBuf, output: &PathBuf, filter: Option<&str>) -> R
     let pb = ProgressBar::new(filtered_records.len() as u64);
     pb.set_style(
         ProgressStyle::default_bar()
-            .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})")?
+            .template(
+                "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} ({eta})",
+            )?
             .progress_chars("#>-"),
     );
 
@@ -1033,9 +1069,7 @@ fn cmd_dcb_extract(input: &PathBuf, output: &PathBuf, filter: Option<&str>) -> R
     let mut errors = 0;
 
     for record in &filtered_records {
-        let file_name = database
-            .record_file_name(record)
-            .unwrap_or("unknown.xml");
+        let file_name = database.record_file_name(record).unwrap_or("unknown.xml");
 
         // Convert path separators and add .xml extension
         let output_path = output.join(file_name.replace('/', std::path::MAIN_SEPARATOR_STR));
@@ -1075,7 +1109,11 @@ fn cmd_dcb_extract(input: &PathBuf, output: &PathBuf, filter: Option<&str>) -> R
 fn cmd_chf_process(input: &PathBuf, output: &PathBuf) -> Result<()> {
     use svarog::chf::parts::ChfData;
 
-    println!("Processing CHF: {} -> {}", input.display(), output.display());
+    println!(
+        "Processing CHF: {} -> {}",
+        input.display(),
+        output.display()
+    );
 
     let chf = if input.extension().and_then(|e| e.to_str()) == Some("chf") {
         ChfFile::from_chf(input).context("Failed to read CHF file")?
@@ -1083,7 +1121,11 @@ fn cmd_chf_process(input: &PathBuf, output: &PathBuf) -> Result<()> {
         ChfFile::from_bin(input, true).context("Failed to read BIN file")?
     };
 
-    println!("Loaded CHF: {} bytes, modded: {}", chf.data().len(), chf.is_modded());
+    println!(
+        "Loaded CHF: {} bytes, modded: {}",
+        chf.data().len(),
+        chf.is_modded()
+    );
 
     // Parse and display character data
     if let Ok(data) = ChfData::parse(chf.data()) {
@@ -1095,10 +1137,7 @@ fn cmd_chf_process(input: &PathBuf, output: &PathBuf) -> Result<()> {
             let blend_count = blends.iter().filter(|b| !b.is_zero()).count();
             if blend_count > 0 {
                 active_blends += blend_count;
-                println!(
-                    "  {}: {} active blends",
-                    face_part, blend_count
-                );
+                println!("  {}: {} active blends", face_part, blend_count);
             }
         }
         println!("DNA: {} total active blends", active_blends);
@@ -1115,9 +1154,11 @@ fn cmd_chf_process(input: &PathBuf, output: &PathBuf) -> Result<()> {
     }
 
     if output.extension().and_then(|e| e.to_str()) == Some("chf") {
-        chf.write_to_chf(output).context("Failed to write CHF file")?;
+        chf.write_to_chf(output)
+            .context("Failed to write CHF file")?;
     } else {
-        chf.write_to_bin(output).context("Failed to write BIN file")?;
+        chf.write_to_bin(output)
+            .context("Failed to write BIN file")?;
     }
 
     println!("Output written");
